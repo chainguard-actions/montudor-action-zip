@@ -1,0 +1,41 @@
+name: Test basic zip usage
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create files to zip
+        run: |
+          mkdir -p /tmp/ziptest
+          echo "hello world" > /tmp/ziptest/file1.txt
+          echo "foo bar" > /tmp/ziptest/file2.txt
+
+      - id: action
+        uses: .
+        with:
+          args: -r /tmp/output.zip /tmp/ziptest
+
+      - name: Assert zip file was created
+        run: |
+          if [ ! -f /tmp/output.zip ]; then
+            echo "FAIL: /tmp/output.zip was not created"
+            exit 1
+          fi
+          echo "PASS: zip file exists"
+
+      - name: Assert zip file contains expected files
+        run: |
+          CONTENTS=$(unzip -l /tmp/output.zip)
+          echo "Zip contents: $CONTENTS"
+          if ! echo "$CONTENTS" | grep -q "file1.txt"; then
+            echo "FAIL: file1.txt not found in zip"
+            exit 1
+          fi
+          if ! echo "$CONTENTS" | grep -q "file2.txt"; then
+            echo "FAIL: file2.txt not found in zip"
+            exit 1
+          fi
+          echo "PASS: zip contains expected files"
