@@ -9,7 +9,7 @@ Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at
 | Version | Tag | Upstream commit |
 |---------|-----|-----------------|
 | v0.1.1 | [`v0.1.1`](https://github.com/chainguard-actions/montudor-action-zip/tree/v0.1.1) | — |
-| v1.0.0 | [`v1.0.0`](https://github.com/chainguard-actions/montudor-action-zip/tree/v1.0.0) | — |
+| v1.0.0 | [`v1.0.0`](https://github.com/chainguard-actions/montudor-action-zip/tree/v1.0.0) | [`0852c26`](https://github.com/montudor/action-zip/commit/0852c26906e00f8a315c704958823928d8018b28) |
 
 ## Privacy
 
