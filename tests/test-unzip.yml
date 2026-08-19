@@ -1,0 +1,58 @@
+name: Test unzip
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create a zip file to extract
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/source"
+          echo "unzip test content" > "$GITHUB_WORKSPACE/source/data.txt"
+          echo "another file" > "$GITHUB_WORKSPACE/source/other.txt"
+          cd "$GITHUB_WORKSPACE"
+          zip -qq -r archive.zip source
+          rm -rf source
+
+      - name: Verify zip exists before unzip
+        run: |
+          if [ ! -f "$GITHUB_WORKSPACE/archive.zip" ]; then
+            echo "FAIL: archive.zip not found before unzip step"
+            exit 1
+          fi
+          echo "archive.zip is present"
+
+      - name: Unzip the archive using the action
+        id: unzip_action
+        uses: .
+        with:
+          args: unzip -qq archive.zip -d extracted
+
+      - name: Assert extracted files exist
+        run: |
+          echo "Checking extracted directory..."
+          if [ ! -d "$GITHUB_WORKSPACE/extracted" ]; then
+            echo "FAIL: extracted directory not found"
+            exit 1
+          fi
+          if [ ! -f "$GITHUB_WORKSPACE/extracted/source/data.txt" ]; then
+            echo "FAIL: data.txt not found in extracted directory"
+            exit 1
+          fi
+          if [ ! -f "$GITHUB_WORKSPACE/extracted/source/other.txt" ]; then
+            echo "FAIL: other.txt not found in extracted directory"
+            exit 1
+          fi
+          echo "PASS: all expected files extracted successfully"
+
+      - name: Assert file content is correct
+        run: |
+          CONTENT=$(cat "$GITHUB_WORKSPACE/extracted/source/data.txt")
+          echo "content: $CONTENT"
+          if [ "$CONTENT" != "unzip test content" ]; then
+            echo "FAIL: file content does not match expected"
+            exit 1
+          fi
+          echo "PASS: file content matches"

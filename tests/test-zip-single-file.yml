@@ -1,0 +1,47 @@
+name: Test zip single file
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create a single test file
+        run: |
+          echo "single file zip test" > "$GITHUB_WORKSPACE/myfile.txt"
+
+      - name: Zip the single file using the action
+        id: zip_single
+        uses: .
+        with:
+          args: zip -qq myfile.zip myfile.txt
+
+      - name: Assert zip file was created
+        run: |
+          echo "Checking for myfile.zip..."
+          if [ ! -f "$GITHUB_WORKSPACE/myfile.zip" ]; then
+            echo "FAIL: myfile.zip was not created"
+            exit 1
+          fi
+          echo "PASS: myfile.zip exists"
+
+      - name: Assert zip contains the correct file
+        run: |
+          echo "Listing zip contents..."
+          unzip -l "$GITHUB_WORKSPACE/myfile.zip"
+          if ! unzip -l "$GITHUB_WORKSPACE/myfile.zip" | grep -q "myfile.txt"; then
+            echo "FAIL: myfile.txt not found in zip"
+            exit 1
+          fi
+          echo "PASS: myfile.txt is in the zip"
+
+      - name: Assert zip file is non-empty
+        run: |
+          SIZE=$(stat -c%s "$GITHUB_WORKSPACE/myfile.zip")
+          echo "zip file size: $SIZE bytes"
+          if [ "$SIZE" -eq 0 ]; then
+            echo "FAIL: zip file is empty"
+            exit 1
+          fi
+          echo "PASS: zip file has content ($SIZE bytes)"
