@@ -1,0 +1,42 @@
+name: Test zip directory
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create test directory with files
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/testdir"
+          echo "hello world" > "$GITHUB_WORKSPACE/testdir/hello.txt"
+          echo "foo bar" > "$GITHUB_WORKSPACE/testdir/foo.txt"
+
+      - id: action
+        uses: .
+        with:
+          args: zip -qq -r testdir.zip testdir
+
+      - name: Assert zip file was created
+        run: |
+          echo "Checking for testdir.zip..."
+          if [ ! -f "$GITHUB_WORKSPACE/testdir.zip" ]; then
+            echo "FAIL: testdir.zip was not created"
+            exit 1
+          fi
+          echo "PASS: testdir.zip exists"
+
+      - name: Assert zip file contains expected files
+        run: |
+          echo "Listing zip contents..."
+          unzip -l "$GITHUB_WORKSPACE/testdir.zip"
+          if ! unzip -l "$GITHUB_WORKSPACE/testdir.zip" | grep -q "hello.txt"; then
+            echo "FAIL: hello.txt not found in zip"
+            exit 1
+          fi
+          if ! unzip -l "$GITHUB_WORKSPACE/testdir.zip" | grep -q "foo.txt"; then
+            echo "FAIL: foo.txt not found in zip"
+            exit 1
+          fi
+          echo "PASS: zip contains expected files"

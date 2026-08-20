@@ -1,0 +1,47 @@
+name: Test zip single file
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create a single test file
+        run: |
+          echo "single file content" > "$GITHUB_WORKSPACE/single.txt"
+
+      - id: action
+        uses: .
+        with:
+          args: zip -qq single.zip single.txt
+
+      - name: Assert zip file was created
+        run: |
+          echo "Checking for single.zip..."
+          if [ ! -f "$GITHUB_WORKSPACE/single.zip" ]; then
+            echo "FAIL: single.zip was not created"
+            exit 1
+          fi
+          echo "PASS: single.zip exists"
+
+      - name: Assert zip contains the single file
+        run: |
+          echo "Listing zip contents..."
+          unzip -l "$GITHUB_WORKSPACE/single.zip"
+          if ! unzip -l "$GITHUB_WORKSPACE/single.zip" | grep -q "single.txt"; then
+            echo "FAIL: single.txt not found in zip"
+            exit 1
+          fi
+          echo "PASS: single.txt found in zip"
+
+      - name: Assert zip file content is correct
+        run: |
+          unzip -p "$GITHUB_WORKSPACE/single.zip" single.txt > /tmp/unzipped_content.txt
+          CONTENT=$(cat /tmp/unzipped_content.txt)
+          echo "content: $CONTENT"
+          if [ "$CONTENT" != "single file content" ]; then
+            echo "FAIL: content mismatch, got: $CONTENT"
+            exit 1
+          fi
+          echo "PASS: file content matches"

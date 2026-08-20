@@ -1,0 +1,48 @@
+name: Test unzip
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create a zip file to extract
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/srcdir"
+          echo "extracted content" > "$GITHUB_WORKSPACE/srcdir/extracted.txt"
+          cd "$GITHUB_WORKSPACE"
+          zip -qq -r archive.zip srcdir
+          rm -rf srcdir
+
+      - name: Assert zip exists before extraction
+        run: |
+          if [ ! -f "$GITHUB_WORKSPACE/archive.zip" ]; then
+            echo "FAIL: archive.zip not found before extraction"
+            exit 1
+          fi
+          echo "PASS: archive.zip exists"
+
+      - id: action
+        uses: .
+        with:
+          args: unzip -qq archive.zip -d extracted
+
+      - name: Assert extracted directory and file exist
+        run: |
+          echo "Checking extracted output..."
+          if [ ! -d "$GITHUB_WORKSPACE/extracted" ]; then
+            echo "FAIL: extracted directory not found"
+            exit 1
+          fi
+          if [ ! -f "$GITHUB_WORKSPACE/extracted/srcdir/extracted.txt" ]; then
+            echo "FAIL: extracted.txt not found"
+            exit 1
+          fi
+          CONTENT=$(cat "$GITHUB_WORKSPACE/extracted/srcdir/extracted.txt")
+          echo "content: $CONTENT"
+          if [ "$CONTENT" != "extracted content" ]; then
+            echo "FAIL: file content does not match"
+            exit 1
+          fi
+          echo "PASS: file extracted with correct content"
