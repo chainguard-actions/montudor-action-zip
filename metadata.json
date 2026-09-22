@@ -1,7 +1,0 @@
-{
-  "owner": "montudor",
-  "name": "action-zip",
-  "visibility": "internal",
-  "description": "This GitHub action exposes the zip command for use in building/archiving",
-  "block_publish": false
-}
